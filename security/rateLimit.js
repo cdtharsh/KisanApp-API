@@ -6,3 +6,9 @@ export const registrationLimiter = rateLimit({
     max: 5, // Limit each IP to 5 registration requests per windowMs
     message: 'Too many registration attempts, please try again after 24 hours',
 });
+
+export const loginLimiter = rateLimit({
+    windowMs: 1* 60* 60* 1000, // 1 HRS
+    max: 3, // Limit each IP to 5 registration requests per windowMs
+    message: 'Too many login attempts, please try agian after 24 hours',
+})

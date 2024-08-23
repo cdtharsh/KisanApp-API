@@ -1,10 +1,8 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import { sendVerificationEmail } from '../services/emailService.js';
 import UserModel from '../model/userModel.js';
-import path from 'path';
-
-const __dirname = path.resolve();
+import { sendVerificationEmail } from '../services/emailService.js';
+import jwt from 'jsonwebtoken';
 
 export async function register(req, res) {
     try {
@@ -49,59 +47,35 @@ export async function register(req, res) {
     }
 }
 
-export async function verifyEmail(req, res) {
+export async function login(req, res) {
     try {
-        const { token } = req.query;
+        const { username, password } = req.body;
 
-        if (!token) {
-            return res.status(400).sendFile(path.join(__dirname, 'files', 'error.html'));
+        // Check if the user exists
+        const user = await UserModel.findOne({ username });
+        if (!user) return res.status(400).send({ error: "Invalid username or password." });
+
+        // Check if the password matches
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) return res.status(400).send({ error: "Invalid username or password." });
+
+        // Check if the user's email is verified (if applicable)
+        if (!user.emailVerified) {
+            return res.status(400).send({ error: "Please verify your email before logging in." });
         }
 
-        const user = await UserModel.findOne({
-            verificationToken: token,
-            verificationTokenExpires: { $gt: Date.now() }
-        });
+        // Generate a JWT token
+        const token = jwt.sign(
+            { id: user._id, username: user.username },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }  // Set token expiration as needed
+        );
 
-        if (!user) {
-            return res.status(400).sendFile(path.join(__dirname, 'files', 'error.html'));
-        }
-
-        user.emailVerified = true;
-        user.verificationToken = undefined;
-        user.verificationTokenExpires = undefined;
-
-        await user.save();
-
-        // Send the success HTML file as the response
-        res.status(200).sendFile(path.join(__dirname, 'files', 'verification.html'));
+        // Send the token to the client
+        res.status(200).send({ msg: "Login successful.", token });
 
     } catch (error) {
-        console.error("Email Verification Error:", error);
-        res.status(500).sendFile(path.join(__dirname, 'files', 'error.html'));
-    }
-}
-
-export async function checkEmailVerification(req, res) {
-    const { email } = req.query;
-
-    if (!email) {
-        return res.status(400).json({ error: 'Email is required.' });
-    }
-
-    try {
-        const user = await UserModel.findOne({ email });
-
-        if (!user) {
-            return res.status(404).json({ error: 'User not found.' });
-        }
-
-        if (user.emailVerified) {
-            return res.status(200).json({ message: 'Email is verified.' });
-        } else {
-            return res.status(200).json({ message: 'Email is not verified.' });
-        }
-    } catch (error) {
-        console.error('Error checking email verification:', error);
-        return res.status(500).json({ error: 'Server error.' });
+        res.status(500).send({ error: "An error occurred. Please try again later." });
+        console.error("Login Error:", error);
     }
 }
