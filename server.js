@@ -13,7 +13,7 @@ app.set('trust proxy', 1);
 app.use(express.json());
 
 // Middleware for logging HTTP requests
-app.use(morgan('combined'));
+app.use(morgan('dev'));
 
 // Middleware for security headers
 app.use(helmet());
