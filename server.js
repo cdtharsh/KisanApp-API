@@ -9,6 +9,8 @@ const app = express();
 
 app.set('trust proxy', 1);
 
+app.use(passport.initialize());
+
 // Middleware for parsing JSON requests
 app.use(express.json());
 

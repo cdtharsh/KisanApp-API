@@ -74,7 +74,8 @@ const UserSchema = new mongoose.Schema({
     verificationTokenExpires: {
         type: Date,
         default: () => Date.now() + 3600000 // Token valid for 1 hour
-    }
+    },
+    googleId: String,
 });
 
 const UserModel = mongoose.model('User', UserSchema);
