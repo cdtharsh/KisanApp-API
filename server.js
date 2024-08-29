@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import connect from './database/mongoDB.js';
 import router from './routes/route.js';
+import { cleanUpExpiredTokens } from './services/deleteToken.js';
 
 const app = express();
 
@@ -12,6 +13,7 @@ app.set('trust proxy', 1);
 // Middleware for parsing JSON requests
 app.use(express.json());
 
+setInterval(cleanUpExpiredTokens,3600000)
 // Middleware for logging HTTP requests
 app.use(morgan('dev'));
 

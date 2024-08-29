@@ -1,8 +1,13 @@
-import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import UserModel from '../model/userModel.js';
-import { sendVerificationEmail } from '../services/emailService.js';
 import jwt from 'jsonwebtoken';
+import UserModel from '../models/userModel.js';
+import TokenModel from '../models/tokenModel.js'; // Import TokenModel
+import { sendVerificationEmail } from '../services/emailService.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+const { JWT_SECRET, JWT_EXPIRES_IN } = process.env;
 
 export async function register(req, res) {
     try {
@@ -51,31 +56,47 @@ export async function login(req, res) {
     try {
         const { username, password } = req.body;
 
-        // Check if the user exists
         const user = await UserModel.findOne({ username });
-        if (!user) return res.status(400).send({ error: "Invalid username or password." });
+        if (!user) return res.status(400).send({ error: "Invalid username" });
 
-        // Check if the password matches
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) return res.status(400).send({ error: "Invalid username or password." });
+        if (!isPasswordValid) return res.status(400).send({ error: "Invalid password." });
 
-        // Check if the user's email is verified (if applicable)
         if (!user.emailVerified) {
             return res.status(400).send({ error: "Please verify your email before logging in." });
         }
 
-        // Generate a JWT token
+        // Generate token
         const token = jwt.sign(
             { id: user._id, username: user.username },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }  // Set token expiration as needed
+            JWT_SECRET,
+            { expiresIn: JWT_EXPIRES_IN }
         );
 
-        // Send the token to the client
+        // Save token to database
+        const expiresAt = new Date(Date.now() + jwt.decode(token).exp); // Calculate expiration date
+        await TokenModel.create({ userId: user._id, token, expiresAt });
+
         res.status(200).send({ msg: "Login successful.", token });
 
     } catch (error) {
         res.status(500).send({ error: "An error occurred. Please try again later." });
         console.error("Login Error:", error);
+    }
+}
+
+export async function logout(req, res) {
+    const token = req.headers['authorization']?.split(' ')[1]; // Bearer token
+
+    if (!token) return res.status(400).send({ error: "No token provided." });
+
+    try {
+        // Delete token from database
+        await TokenModel.deleteOne({ token });
+
+        res.status(200).send({ msg: "Logout successful." });
+    } catch (error) {
+        res.status(500).send({ error: "An error occurred during logout." });
+        console.error("Logout Error:", error);
     }
 }

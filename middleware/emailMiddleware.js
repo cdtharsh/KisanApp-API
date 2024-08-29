@@ -1,4 +1,4 @@
-import UserModel from '../model/userModel.js';
+import UserModel from '../models/userModel.js';
 import path from 'path';
 
 const __dirname = path.resolve();
