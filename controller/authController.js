@@ -4,6 +4,7 @@ import UserModel from '../models/userModel.js';
 import TokenModel from '../models/tokenModel.js'; // Import TokenModel
 import { sendVerificationEmail } from '../services/emailService.js';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
 
 dotenv.config();
 
