@@ -15,7 +15,7 @@ app.use(express.json());
 
 setInterval(cleanUpExpiredTokens,3600000)
 // Middleware for logging HTTP requests
-app.use(morgan('dev'));
+app.use(morgan('combined'));
 
 // Middleware for security headers
 app.use(helmet());
@@ -26,6 +26,7 @@ app.disable('x-powered-by');
 // Middleware for enabling CORS
 app.use(cors({
     origin: `https://api.${process.env.ROOT}`, // Update with your client's domain
+    origin: `http://localhost:55002`,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true // Allow credentials (e.g., cookies, authorization headers)
 }));

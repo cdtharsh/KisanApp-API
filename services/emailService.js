@@ -1,11 +1,19 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    // service: 'gmail',
+    // auth: {
+    //     user: process.env.EMAIL, // Your Gmail address
+    //     pass: process.env.PASSWORD, // Your Gmail app password or account password
+    // }
+
+    host: 'smtp.gmail.com', // e.g., smtp.gmail.com
+    port: 465, // or 465 for secure
+    secure: true, // true for 465, false for other ports
     auth: {
-        user: process.env.EMAIL, // Your Gmail address
-        pass: process.env.PASSWORD, // Your Gmail app password or account password
-    }
+        user: process.env.EMAIL, // your email address
+        pass: process.env.PASSWORD, // your email password or application-specific password
+    },
 });
 
 export async function sendVerificationEmail(email, verificationLink, firstName) {
