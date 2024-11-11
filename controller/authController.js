@@ -74,8 +74,11 @@ export async function login(req, res) {
             { expiresIn: JWT_EXPIRES_IN }
         );
 
+        const decode = jwt.decode(token)
+
         // Save token to database
-        const expiresAt = new Date(Date.now() + jwt.decode(token).exp); // Calculate expiration date
+        const expiresAt = new Date(decode.exp * 1000); // Calculate expiration date
+
         await TokenModel.create({ userId: user._id, token, expiresAt });
 
         res.status(200).send({ msg: "Login successful.", token });
