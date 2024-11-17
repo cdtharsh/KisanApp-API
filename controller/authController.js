@@ -57,37 +57,53 @@ export async function login(req, res) {
     try {
         const { username, password } = req.body;
 
+        if (!username || !password) {
+            return res.status(400).send({ error: "Username and password are required." });
+        }
+
+        // Check if user exists
         const user = await UserModel.findOne({ username });
-        if (!user) return res.status(400).send({ error: "Invalid username" });
+        if (!user) return res.status(400).send({ error: "Invalid username or password." });
 
+        // Validate password
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) return res.status(400).send({ error: "Invalid password." });
+        if (!isPasswordValid) return res.status(400).send({ error: "Invalid username or password." });
 
+        // Check email verification status
         if (!user.emailVerified) {
             return res.status(400).send({ error: "Please verify your email before logging in." });
         }
 
-        // Generate token
+        // Generate JWT token
         const token = jwt.sign(
             { id: user._id, username: user.username },
             JWT_SECRET,
             { expiresIn: JWT_EXPIRES_IN }
         );
 
-        const decode = jwt.decode(token)
+        // Decode token to extract expiration time
+        const decoded = jwt.decode(token);
+        const expiresAt = new Date(decoded.exp * 1000); // Convert seconds to milliseconds
 
-        // Save token to database
-        const expiresAt = new Date(decode.exp * 1000); // Calculate expiration date
-
+        // Save the token in the database
         await TokenModel.create({ userId: user._id, token, expiresAt });
 
-        res.status(200).send({ msg: "Login successful.", token });
-
+        // Send response
+        res.status(200).send({
+            msg: "Login successful.",
+            token,
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+            },
+        });
     } catch (error) {
-        res.status(500).send({ error: "An error occurred. Please try again later." });
         console.error("Login Error:", error);
+        res.status(500).send({ error: "An error occurred. Please try again later." });
     }
 }
+
 
 export async function logout(req, res) {
     const token = req.headers['authorization']?.split(' ')[1]; // Bearer token

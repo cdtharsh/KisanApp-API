@@ -26,7 +26,6 @@ app.disable('x-powered-by');
 // Middleware for enabling CORS
 app.use(cors({
     origin: `https://api.${process.env.ROOT}`, // Update with your client's domain
-    origin: `http://localhost:55002`,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true // Allow credentials (e.g., cookies, authorization headers)
 }));
