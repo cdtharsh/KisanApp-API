@@ -71,7 +71,19 @@ export async function login(req, res) {
 
         // Check email verification status
         if (!user.emailVerified) {
-            return res.status(400).send({ error: "Please verify your email before logging in." });
+            // Generate a new verification token
+            const verificationLink = `http://api.${process.env.ROOT}/verify-email?token=${user.verificationToken}`;
+            
+            // Resend the verification email
+            try {
+                await sendVerificationEmail(user.email, verificationLink, user.firstName);
+                return res.status(400).send({
+                    error: "Email not verified. A new verification email has been sent to your email address."
+                });
+            } catch (emailError) {
+                console.error("Error sending verification email:", emailError);
+                return res.status(500).send({ error: "An error occurred while resending the verification email." });
+            }
         }
 
         // Generate JWT token
@@ -103,6 +115,7 @@ export async function login(req, res) {
         res.status(500).send({ error: "An error occurred. Please try again later." });
     }
 }
+
 
 
 export async function logout(req, res) {
