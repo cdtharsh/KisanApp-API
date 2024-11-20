@@ -72,11 +72,27 @@ export async function login(req, res) {
         // Check email verification status
         if (!user.emailVerified) {
             // Generate a new verification token
-            const verificationLink = `http://api.${process.env.ROOT}/verify-email?token=${user.verificationToken}`;
-            
+            const verificationToken = jwt.sign(
+                { id: user._id, email: user.email },
+                JWT_SECRET,
+                { expiresIn: '1h' } // Set a reasonable expiration time
+            );
+
+            // Update user record with the new verification token
+            user.verificationToken = verificationToken;
+            await user.save();
+
+            // Construct the verification link
+            const verificationLink = `http://api.${process.env.ROOT}/verify-email?token=${verificationToken}`;
+
             // Resend the verification email
             try {
                 await sendVerificationEmail(user.email, verificationLink, user.firstName);
+
+                // Save the token in the database
+                const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour in milliseconds
+                await TokenModel.create({ userId: user._id, token: verificationToken, expiresAt });
+
                 return res.status(400).send({
                     error: "Email not verified. A new verification email has been sent to your email address."
                 });
@@ -86,7 +102,7 @@ export async function login(req, res) {
             }
         }
 
-        // Generate JWT token
+        // Generate JWT token for login
         const token = jwt.sign(
             { id: user._id, username: user.username },
             JWT_SECRET,

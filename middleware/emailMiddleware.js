@@ -3,30 +3,64 @@ import path from 'path';
 
 const __dirname = path.resolve();
 
-export async function checkEmailVerification(req, res) {
-    const { email } = req.query;
+// export async function checkEmailVerification(req, res) {
+//     const { email } = req.query;
 
-    if (!email) {
-        return res.status(400).json({ error: 'Email is required.' });
+//     if (!email) {
+//         return res.status(400).json({ error: 'Email is required.' });
+//     }
+
+//     try {
+//         const user = await UserModel.findOne({ email });
+
+//         if (!user) {
+//             return res.status(404).json({ error: 'User not found.' });
+//         }
+
+//         if (user.emailVerified) {
+//             return res.status(200).json({ message: 'Email is verified.' });
+//         } else {
+//             return res.status(200).json({ message: 'Email is not verified.' });
+//         }
+//     } catch (error) {
+//         console.error('Error checking email verification:', error);
+//         return res.status(500).json({ error: 'Server error.' });
+//     }
+// }
+
+
+export async function checkEmailVerification(req, res) {
+    const { username } = req.query; // Extract username from the query
+
+    if (!username) {
+        return res.status(400).json({ error: 'Username is required.' });
     }
 
     try {
-        const user = await UserModel.findOne({ email });
+        // Find user by username in the database
+        const user = await UserModel.findOne({ username });
 
+        // If no user is found
         if (!user) {
             return res.status(404).json({ error: 'User not found.' });
         }
 
+        // Check verification status and return the response
         if (user.emailVerified) {
-            return res.status(200).json({ message: 'Email is verified.' });
+            return res.status(200).json({
+                message: 'Email is verified.'
+            });
         } else {
-            return res.status(200).json({ message: 'Email is not verified.' });
+            return res.status(200).json({
+                message: 'Email is not verified.'
+            });
         }
     } catch (error) {
         console.error('Error checking email verification:', error);
         return res.status(500).json({ error: 'Server error.' });
     }
 }
+
 
 export async function verifyEmail(req, res) {
     try {
