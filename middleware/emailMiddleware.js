@@ -48,11 +48,13 @@ export async function checkEmailVerification(req, res) {
         // Check verification status and return the response
         if (user.emailVerified) {
             return res.status(200).json({
-                message: 'Email is verified.'
+                message: 'Email is verified.',
+                isVerified: true
             });
         } else {
             return res.status(200).json({
-                message: 'Email is not verified.'
+                message: 'Email is not verified.',
+                isVerified: false
             });
         }
     } catch (error) {
@@ -60,6 +62,7 @@ export async function checkEmailVerification(req, res) {
         return res.status(500).json({ error: 'Server error.' });
     }
 }
+
 
 
 export async function verifyEmail(req, res) {
