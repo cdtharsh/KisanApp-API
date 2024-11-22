@@ -9,6 +9,7 @@ const router = Router();
 router.post('/register', rateLimit.registrationLimiter, authController.register);
 router.get('/verify-email', authEmailMiddleware.verifyEmail);
 router.get('/check-email-verification', authEmailMiddleware.checkEmailVerification);
+router.post('/resend-verification-email', authEmailMiddleware.resendEmailVerification);
 
 router.post('/login', rateLimit.loginLimiter, authController.login);
 router.post('/logout',authMiddleware.verifyToken, authController.logout);
