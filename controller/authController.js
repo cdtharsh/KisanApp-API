@@ -93,8 +93,9 @@ export async function login(req, res) {
                 const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour in milliseconds
                 await TokenModel.create({ userId: user._id, token: verificationToken, expiresAt });
 
-                return res.status(400).send({
-                    error: "Email not verified. A new verification email has been sent to your email address."
+                return res.status(401).send({
+                    isEmailVerified: false,
+                    error: "Email is not verified. A new verification email has been sent to your email address."
                 });
             } catch (emailError) {
                 console.error("Error sending verification email:", emailError);
