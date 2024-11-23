@@ -35,7 +35,7 @@ export async function forgotPassword(req, res) {
         });
 
         // Send the OTP to the user's email
-        await sendOtpEmail(user.email, otp);
+        await sendOtpEmail(user.email, otp, );
 
         res.status(200).send({ msg: "Password reset OTP has been sent to your email." });
     } catch (error) {
