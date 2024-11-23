@@ -37,7 +37,24 @@ export async function register(req, res) {
 
         await user.save();
 
-        const verificationLink = `http://api.${process.env.ROOT}/verify-email?token=${user.verificationToken}`;
+        // Generate email verification token
+        const verificationToken = jwt.sign(
+            { id: user._id, email: user.email },
+            JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+        // Store the verification token in TokenModel
+        await TokenModel.create({
+            userId: user._id,
+            token: verificationToken,
+            tokenType: 'emailVerification',
+            expiresAt
+        });
+
+        const verificationLink = `http://api.${process.env.ROOT}/verify-email?token=${verificationToken}`;
         await sendVerificationEmail(user.email, verificationLink, user.firstName);
 
         res.status(201).send({ msg: "User registered successfully. Please verify your email." });
@@ -71,27 +88,28 @@ export async function login(req, res) {
 
         // Check email verification status
         if (!user.emailVerified) {
-            // Generate a new verification token
-            const verificationToken = jwt.sign(
+            // Generate a new email verification token
+            const emailVerificationToken = jwt.sign(
                 { id: user._id, email: user.email },
                 JWT_SECRET,
                 { expiresIn: '1h' } // Set a reasonable expiration time
             );
 
-            // Update user record with the new verification token
-            user.verificationToken = verificationToken;
-            await user.save();
+            const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+            // Upsert the email verification token in TokenModel
+            await TokenModel.updateOne(
+                { userId: user._id, tokenType: 'emailVerification' }, // Filter by userId and tokenType
+                { token: emailVerificationToken, expiresAt }, // New token data
+                { upsert: true } // Create a new record if it doesn't exist
+            );
 
             // Construct the verification link
-            const verificationLink = `http://api.${process.env.ROOT}/verify-email?token=${verificationToken}`;
+            const verificationLink = `http://api.${process.env.ROOT}/verify-email?token=${emailVerificationToken}`;
 
             // Resend the verification email
             try {
                 await sendVerificationEmail(user.email, verificationLink, user.firstName);
-
-                // Save the token in the database
-                const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour in milliseconds
-                await TokenModel.create({ userId: user._id, token: verificationToken, expiresAt });
 
                 return res.status(401).send({
                     isEmailVerified: false,
@@ -114,8 +132,12 @@ export async function login(req, res) {
         const decoded = jwt.decode(token);
         const expiresAt = new Date(decoded.exp * 1000); // Convert seconds to milliseconds
 
-        // Save the token in the database
-        await TokenModel.create({ userId: user._id, token, expiresAt });
+        // Upsert the login token in TokenModel
+        await TokenModel.updateOne(
+            { userId: user._id, tokenType: 'login' }, // Filter by userId and tokenType
+            { token, expiresAt }, // New token data
+            { upsert: true } // Create a new record if it doesn't exist
+        );
 
         // Send response
         res.status(200).send({
@@ -132,8 +154,6 @@ export async function login(req, res) {
         res.status(500).send({ error: "An error occurred. Please try again later." });
     }
 }
-
-
 
 export async function logout(req, res) {
     const token = req.headers['authorization']?.split(' ')[1]; // Bearer token

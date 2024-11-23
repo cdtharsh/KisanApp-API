@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 import TokenModel from '../models/tokenModel.js';
 
-dotenv.config()
+dotenv.config();
 
 const __dirname = path.resolve();
 const { JWT_SECRET, JWT_EXPIRES_IN } = process.env;
@@ -53,24 +53,32 @@ export async function verifyEmail(req, res) {
             return res.status(400).sendFile(path.join(__dirname, 'files', 'error.html'));
         }
 
-        const user = await UserModel.findOne({
-            verificationToken: token,
-            verificationTokenExpires: { $gt: Date.now() }
+        // Find the email verification token in the TokenModel and ensure it's valid and not expired
+        const emailToken = await TokenModel.findOne({
+            tokenType: "emailVerification",
+            token: token,
+            expiresAt: { $gt: Date.now() }, // Ensure the token is not expired
         });
 
+        if (!emailToken) {
+            return res.status(400).sendFile(path.join(__dirname, 'files', 'error.html'));
+        }
+
+        // Find the corresponding user using the userId from the token
+        const user = await UserModel.findById(emailToken.userId);
         if (!user) {
             return res.status(400).sendFile(path.join(__dirname, 'files', 'error.html'));
         }
 
+        // Mark the user's email as verified
         user.emailVerified = true;
-        user.verificationToken = undefined;
-        user.verificationTokenExpires = undefined;
-
         await user.save();
+
+        // Remove the used email verification token
+        await TokenModel.deleteOne({ _id: emailToken._id });
 
         // Send the success HTML file as the response
         res.status(200).sendFile(path.join(__dirname, 'files', 'verification.html'));
-
     } catch (error) {
         console.error("Email Verification Error:", error);
         res.status(500).sendFile(path.join(__dirname, 'files', 'error.html'));
@@ -95,25 +103,26 @@ export async function resendEmailVerification(req, res) {
             return res.status(400).json({ msg: 'Email is already verified.' });
         }
 
-        // Generate a new verification token
+        // Generate a new email verification token
         const verificationToken = jwt.sign(
             { id: user._id, email: user.email },
             JWT_SECRET,
             { expiresIn: '1h' }
         );
 
-        user.verificationToken = verificationToken;
-        user.verificationTokenExpires = Date.now() + 60 * 60 * 1000; // 1 hour
-        await user.save();
+        // Create the token in TokenModel (not in UserModel)
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+        await TokenModel.create({
+            userId: user._id,
+            token: verificationToken,
+            tokenType: 'emailVerification',
+            expiresAt,
+        });
 
         const verificationLink = `http://api.${process.env.ROOT}/verify-email?token=${verificationToken}`;
 
-        // Send the email
+        // Send the verification email
         await sendVerificationEmail(user.email, verificationLink, user.firstName);
-
-        // Optionally save the token to a token model
-        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-        await TokenModel.create({ userId: user._id, token: verificationToken, expiresAt });
 
         return res.status(200).json({ msg: 'Verification email sent successfully.' });
     } catch (error) {

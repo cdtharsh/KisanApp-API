@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import validator from 'validator';
-import crypto from 'crypto';
 
 const UserSchema = new mongoose.Schema({
     username: {
@@ -66,15 +65,7 @@ const UserSchema = new mongoose.Schema({
     emailVerified: {
         type: Boolean,
         default: false
-    },
-    verificationToken: {
-        type: String,
-        default: () => crypto.randomBytes(32).toString('hex')
-    },
-    verificationTokenExpires: {
-        type: Date,
-        default: () => Date.now() + 3600000 // Token valid for 1 hour
-    },
+    }
 });
 
 const UserModel = mongoose.model('User', UserSchema);

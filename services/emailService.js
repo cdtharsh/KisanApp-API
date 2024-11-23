@@ -169,3 +169,34 @@ export async function sendVerificationEmail(email, verificationLink, firstName) 
 
     return transporter.sendMail(mailOptions);
 }
+
+// **2. Send OTP Email**
+export async function sendOtpEmail(email, otp, firstName) {
+    const mailOptions = {
+        from: 'admin@kisanwale.in',
+        to: email,
+        subject: 'Password Reset OTP',
+        html: `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP for Password Reset</title>
+    <style>
+        body { font-family: 'Lato', sans-serif; color: rgba(0, 0, 0, 0.6); }
+        .btn { padding: 10px 20px; border-radius: 5px; background: #30e3ca; color: #fff; font-size: 16px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h2>Hello ${firstName},</h2>
+    <p>We received a request to reset your password. Use the OTP below to proceed:</p>
+    <h1 style="color: #30e3ca; text-align: center;">${otp}</h1>
+    <p>This OTP is valid for 5 minutes. If you did not request a password reset, please ignore this email.</p>
+    <p>For support, contact us at <a href="mailto:support@kisanwale.in">support@kisanwale.in</a>.</p>
+    <p>&copy; 2024 KisanWale. All rights reserved.</p>
+</body>
+</html>`,
+    };
+
+    return transporter.sendMail(mailOptions);
+}
