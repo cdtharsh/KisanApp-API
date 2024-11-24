@@ -11,7 +11,7 @@ router.post('/register', rateLimit.registrationLimiter, authController.register)
 router.get('/verify-email', authEmailMiddleware.verifyEmail);
 router.get('/check-email-verification', authEmailMiddleware.checkEmailVerification);
 router.post('/resend-verification-email', authEmailMiddleware.resendEmailVerification);
-router.post('/forget-password', passController.forgotPassword);
+router.post('/forget-password-email', passController.forgotPassword);
 router.post('/reset-with-email', passController.resetPasswordWithOtp);
 
 router.post('/login', rateLimit.loginLimiter, authController.login);
