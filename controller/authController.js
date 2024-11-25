@@ -12,8 +12,9 @@ const { JWT_SECRET, JWT_EXPIRES_IN } = process.env;
 
 export async function register(req, res) {
     try {
-        const { username, password, email, mobile, ...rest } = req.body;
+        const { username, password, email, mobile, firstName, lastName, address, ...rest } = req.body;
 
+        // Check for existing username, email, or mobile number
         const [usernameCheck, emailCheck, mobileCheck] = await Promise.all([
             UserModel.findOne({ username }),
             UserModel.findOne({ email }),
@@ -24,17 +25,23 @@ export async function register(req, res) {
         if (emailCheck) return res.status(400).send({ error: "Email already taken." });
         if (mobileCheck) return res.status(400).send({ error: "Mobile number already taken." });
 
+        // Hash the password
         const salt = await bcrypt.genSalt(12);
         const hashedPassword = await bcrypt.hash(password, salt);
 
+        // Create a new user object
         const user = new UserModel({
             username,
             password: hashedPassword,
             email,
             mobile,
+            firstName,
+            lastName,
+            address,
             ...rest
         });
 
+        // Save the user to the database
         await user.save();
 
         // Generate email verification token
@@ -44,9 +51,9 @@ export async function register(req, res) {
             { expiresIn: '1h' }
         );
 
-        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+        const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour expiration
 
-        // Store the verification token in TokenModel
+        // Store the verification token
         await TokenModel.create({
             userId: user._id,
             token: verificationToken,
@@ -69,6 +76,7 @@ export async function register(req, res) {
         console.error("Registration Error:", error);
     }
 }
+
 
 export async function login(req, res) {
     try {
