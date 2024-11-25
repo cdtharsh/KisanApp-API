@@ -65,8 +65,12 @@ const UserSchema = new mongoose.Schema({
     emailVerified: {
         type: Boolean,
         default: false
+    },
+    lastLogin: {
+        type: Date, // Track the last login date
     }
-});
+}, { timestamps: true }); // Automatically adds `createdAt` and `updatedAt`
+
 
 const UserModel = mongoose.model('User', UserSchema);
 export default UserModel;

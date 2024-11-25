@@ -78,68 +78,55 @@ export async function login(req, res) {
             return res.status(400).send({ error: "Username and password are required." });
         }
 
-        // Check if user exists
         const user = await UserModel.findOne({ username });
         if (!user) return res.status(400).send({ error: "Invalid username or password." });
 
-        // Validate password
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) return res.status(400).send({ error: "Invalid username or password." });
 
-        // Check email verification status
         if (!user.emailVerified) {
-            // Generate a new email verification token
             const emailVerificationToken = jwt.sign(
                 { id: user._id, email: user.email },
                 JWT_SECRET,
-                { expiresIn: '1h' } // Set a reasonable expiration time
+                { expiresIn: '1h' }
             );
 
-            const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+            const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
-            // Upsert the email verification token in TokenModel
             await TokenModel.updateOne(
-                { userId: user._id, tokenType: 'emailVerification' }, // Filter by userId and tokenType
-                { token: emailVerificationToken, expiresAt }, // New token data
-                { upsert: true } // Create a new record if it doesn't exist
+                { userId: user._id, tokenType: 'emailVerification' },
+                { token: emailVerificationToken, expiresAt },
+                { upsert: true }
             );
 
-            // Construct the verification link
             const verificationLink = `http://api.${process.env.ROOT}/verify-email?token=${emailVerificationToken}`;
+            await sendVerificationEmail(user.email, verificationLink, user.firstName);
 
-            // Resend the verification email
-            try {
-                await sendVerificationEmail(user.email, verificationLink, user.firstName);
-
-                return res.status(401).send({
-                    isEmailVerified: false,
-                    error: "Email is not verified. A new verification email has been sent to your email address."
-                });
-            } catch (emailError) {
-                console.error("Error sending verification email:", emailError);
-                return res.status(500).send({ error: "An error occurred while resending the verification email." });
-            }
+            return res.status(401).send({
+                isEmailVerified: false,
+                error: "Email is not verified. A new verification email has been sent."
+            });
         }
 
-        // Generate JWT token for login
         const token = jwt.sign(
             { id: user._id, username: user.username },
             JWT_SECRET,
             { expiresIn: JWT_EXPIRES_IN }
         );
 
-        // Decode token to extract expiration time
         const decoded = jwt.decode(token);
-        const expiresAt = new Date(decoded.exp * 1000); // Convert seconds to milliseconds
+        const expiresAt = new Date(decoded.exp * 1000);
 
-        // Upsert the login token in TokenModel
         await TokenModel.updateOne(
-            { userId: user._id, tokenType: 'login' }, // Filter by userId and tokenType
-            { token, expiresAt }, // New token data
-            { upsert: true } // Create a new record if it doesn't exist
+            { userId: user._id, tokenType: 'login' },
+            { token, expiresAt },
+            { upsert: true }
         );
 
-        // Send response
+        // Update lastLogin timestamp
+        user.lastLogin = new Date();
+        await user.save();
+
         res.status(200).send({
             msg: "Login successful.",
             token,
@@ -147,6 +134,7 @@ export async function login(req, res) {
                 id: user._id,
                 username: user.username,
                 email: user.email,
+                lastLogin: user.lastLogin
             },
         });
     } catch (error) {
@@ -154,6 +142,7 @@ export async function login(req, res) {
         res.status(500).send({ error: "An error occurred. Please try again later." });
     }
 }
+
 
 export async function logout(req, res) {
     const token = req.headers['authorization']?.split(' ')[1]; // Bearer token
