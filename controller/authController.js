@@ -86,7 +86,7 @@ export async function login(req, res) {
             return res.status(400).send({ error: "Username and password are required." });
         }
 
-        const user = await UserModel.findOne({ username });
+        const user = await UserModel.findOne({ username : {$eq: username }});
         if (!user) return res.status(400).send({ error: "Invalid username or password." });
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
