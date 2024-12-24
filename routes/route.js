@@ -13,7 +13,6 @@ router.get('/check-email-verification', rateLimit.checkEmailVerificationLimiter,
 router.post('/resend-verification-email', rateLimit.resendEmailVerificationLimiter, authEmailMiddleware.resendEmailVerification);
 router.post('/forget-password-email', rateLimit.forgotPasswordLimiter, passController.forgotPassword);
 router.post('/reset-with-email', rateLimit.resetPasswordWithOtpLimiter, passController.resetPasswordWithOtp);
-
 router.post('/login', rateLimit.loginLimiter, authController.login);
 router.post('/logout', authMiddleware.verifyToken, authController.logout);
 
