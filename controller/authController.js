@@ -18,7 +18,7 @@ export async function register(req, res) {
         const [usernameCheck, emailCheck, mobileCheck] = await Promise.all([
             UserModel.findOne({ username }),
             UserModel.findOne({ email }),
-            UserModel.findOne({ mobile })
+            UserModel.findOne({ mobile: { $eq: mobile } })
         ]);
 
         if (usernameCheck) return res.status(400).send({ error: "Username already taken." });
