@@ -13,7 +13,7 @@ export async function forgotPassword(req, res) {
 
     try {
         // Check if the user exists
-        const user = await UserModel.findOne({ email });
+        const user = await UserModel.findOne({ email: { $eq: email } });
         if (!user) {
             return res.status(404).send({ error: "No user found with this email." });
         }
