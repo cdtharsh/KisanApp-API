@@ -20,7 +20,7 @@ export async function checkEmailVerification(req, res) {
 
     try {
         // Find user by username in the database
-        const user = await UserModel.findOne({ username });
+        const user = await UserModel.findOne({ username: { $eq: username } });
 
         // If no user is found
         if (!user) {
