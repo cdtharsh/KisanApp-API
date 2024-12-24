@@ -46,6 +46,12 @@ export const resetPasswordWithOtpLimiter = RateLimit({
 
 export const emailVerificationLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 10,
+    max: 3,
+    message: 'Too many requests, please try again after 15 minutes',
+});
+
+export const logoutLimiter = RateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 1,
     message: 'Too many requests, please try again after 15 minutes',
 });
