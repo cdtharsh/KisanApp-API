@@ -56,7 +56,7 @@ export async function verifyEmail(req, res) {
         // Find the email verification token in the TokenModel and ensure it's valid and not expired
         const emailToken = await TokenModel.findOne({
             tokenType: "emailVerification",
-            token: token,
+            token: { $eq: token },
             expiresAt: { $gt: Date.now() }, // Ensure the token is not expired
         });
 
