@@ -16,7 +16,7 @@ export async function register(req, res) {
 
         // Check for existing username, email, or mobile number
         const [usernameCheck, emailCheck, mobileCheck] = await Promise.all([
-            UserModel.findOne({ username }),
+            UserModel.findOne({ username: { $eq: username } }),
             UserModel.findOne({ email }),
             UserModel.findOne({ mobile: { $eq: mobile } })
         ]);
