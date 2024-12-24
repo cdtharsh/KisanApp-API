@@ -88,8 +88,8 @@ export async function verifyEmail(req, res) {
 export async function resendEmailVerification(req, res) {
     const { username } = req.query;
 
-    if (!username) {
-        return res.status(400).json({ error: 'Username is required.' });
+    if (!username || typeof username !== 'string' || !/^[a-zA-Z0-9_]+$/.test(username)) {
+        return res.status(400).json({ error: 'Invalid username.' });
     }
 
     try {
