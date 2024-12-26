@@ -16,6 +16,6 @@ router.post('/forget-password-email', rateLimit.forgotPasswordLimiter, passContr
 router.post('/reset-with-email', rateLimit.resetPasswordWithOtpLimiter, passController.resetPasswordWithOtp);
 router.post('/login', rateLimit.loginLimiter, authController.login);
 router.post('/logout', authMiddleware.verifyToken, authController.logout);
-router.get('/weather', rateLimit.weatherLimiter, weather);
+router.get('/weather', rateLimit.weatherLimiter, authMiddleware.verifyToken, weather);
 
 export default router;
