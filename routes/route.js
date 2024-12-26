@@ -4,6 +4,7 @@ import * as authEmailMiddleware from '../middleware/emailMiddleware.js';
 import * as rateLimit from '../security/rateLimit.js';
 import * as authMiddleware from '../middleware/authMiddleware.js';
 import * as passController from '../controller/passwordReset.js';
+import { weather } from '../services/weatherService.js';
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.post('/forget-password-email', rateLimit.forgotPasswordLimiter, passContr
 router.post('/reset-with-email', rateLimit.resetPasswordWithOtpLimiter, passController.resetPasswordWithOtp);
 router.post('/login', rateLimit.loginLimiter, authController.login);
 router.post('/logout', authMiddleware.verifyToken, authController.logout);
+router.get('/weather', rateLimit.weatherLimiter, weather);
 
 export default router;
