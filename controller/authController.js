@@ -86,7 +86,7 @@ export async function login(req, res) {
             return res.status(400).send({ error: "Username and password are required." });
         }
 
-        const user = await UserModel.findOne({ username : {$eq: username }});
+        const user = await UserModel.findOne({ username: { $eq: username } });
         if (!user) return res.status(400).send({ error: "Invalid username or password." });
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -142,7 +142,9 @@ export async function login(req, res) {
                 id: user._id,
                 username: user.username,
                 email: user.email,
-                lastLogin: user.lastLogin
+                lastLogin: user.lastLogin,
+                firstName: user.firstName,
+                lastName: user.lastName,
             },
         });
     } catch (error) {
