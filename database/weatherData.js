@@ -1,10 +1,14 @@
 import NodeCache from "node-cache";
 import axios from "axios";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 const myCache = new NodeCache({ stdTTL: 86400, checkperiod: 600 });
 
-export async function fetchData(lat, lon, date) {
-    const cacheKey = `${lat}_${lon}_${date}`;
+export async function fetchData(lat, lon) {
+    const cacheKey = `${lat}_${lon}`;
 
     const cachedData = myCache.get(cacheKey);
     if (cachedData) {
@@ -13,7 +17,9 @@ export async function fetchData(lat, lon, date) {
     }
 
     try {
-        const url = `https://mausamgram.imd.gov.in/test4_mme.php?lat_gfs=${lat}&lon_gfs=${lon}&date=${date}_3hr_0p125`;
+        const apiKey = process.env.WEATHER_API_KEY; // Access API key from .env
+        const url = `http://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${lat},${lon}&days=3&aqi=no&alerts=no`;
+
         const response = await axios.get(url);
 
         myCache.set(cacheKey, response.data);
@@ -21,6 +27,6 @@ export async function fetchData(lat, lon, date) {
         return response.data;
     } catch (error) {
         console.error('Error fetching data', error);
-        throw new Error("Failed t fetch data");
+        throw new Error("Failed to fetch data");
     }
 }
