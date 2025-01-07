@@ -68,7 +68,11 @@ const UserSchema = new mongoose.Schema({
     },
     lastLogin: {
         type: Date, // Track the last login date
-    }
+    },
+    isAdmin: {
+        type: Boolean,
+        default: false
+    },
 }, { timestamps: true }); // Automatically adds `createdAt` and `updatedAt`
 
 

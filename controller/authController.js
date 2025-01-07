@@ -14,6 +14,10 @@ export async function register(req, res) {
     try {
         const { username, password, email, mobile, firstName, lastName, address, ...rest } = req.body;
 
+        if (isAdmin !== undefined) {
+            return res.status(400).send({ error: "You cannot assign the 'isAdmin' role please contact the support." });
+        }
+
         // Check for existing username, email, or mobile number
         const [usernameCheck, emailCheck, mobileCheck] = await Promise.all([
             UserModel.findOne({ username: { $eq: username } }),
@@ -92,39 +96,24 @@ export async function login(req, res) {
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) return res.status(400).send({ error: "Invalid username or password." });
 
-        if (!user.emailVerified) {
-            const emailVerificationToken = jwt.sign(
-                { id: user._id, email: user.email },
-                JWT_SECRET,
-                { expiresIn: '1h' }
-            );
+        // Prepare JWT payload
+        const payload = {
+            id: user._id,
+            username: user.username,
+        };
 
-            const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
-
-            await TokenModel.updateOne(
-                { userId: user._id, tokenType: 'emailVerification' },
-                { token: emailVerificationToken, expiresAt },
-                { upsert: true }
-            );
-
-            const verificationLink = `http://api.${process.env.ROOT}/verify-email?token=${emailVerificationToken}`;
-            await sendVerificationEmail(user.email, verificationLink, user.firstName);
-
-            return res.status(401).send({
-                isEmailVerified: false,
-                error: "Email is not verified. A new verification email has been sent."
-            });
+        // Include isAdmin in payload only if user is an admin
+        if (user.isAdmin) {
+            payload.isAdmin = true;
         }
 
-        const token = jwt.sign(
-            { id: user._id, username: user.username },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
-        );
+        // Generate JWT
+        const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
 
         const decoded = jwt.decode(token);
         const expiresAt = new Date(decoded.exp * 1000);
 
+        // Store the login token
         await TokenModel.updateOne(
             { userId: user._id, tokenType: 'login' },
             { token, expiresAt },
@@ -135,7 +124,8 @@ export async function login(req, res) {
         user.lastLogin = new Date();
         await user.save();
 
-        res.status(200).send({
+        // Prepare the response
+        const response = {
             msg: "Login successful.",
             token,
             user: {
@@ -146,12 +136,20 @@ export async function login(req, res) {
                 firstName: user.firstName,
                 lastName: user.lastName,
             },
-        });
+        };
+
+        // Include isAdmin in response only if user is an admin
+        if (user.isAdmin) {
+            response.user.isAdmin = true;
+        }
+
+        res.status(200).send(response);
     } catch (error) {
         console.error("Login Error:", error);
         res.status(500).send({ error: "An error occurred. Please try again later." });
     }
 }
+
 
 
 export async function logout(req, res) {

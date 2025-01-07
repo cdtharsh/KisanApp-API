@@ -30,11 +30,11 @@ app.use(helmet());
 app.disable('x-powered-by');
 
 // Middleware for enabling CORS
-app.use(cors({
-    origin: `https://api.${process.env.ROOT}`, // Update with your client's domain
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true // Allow credentials (e.g., cookies, authorization headers)
-}));
+// app.use(cors({
+//     origin: `https://api.${process.env.ROOT}`, // Update with your client's domain
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//     credentials: true // Allow credentials (e.g., cookies, authorization headers)
+// }));
 
 app.use('/image/posters', express.static(path.join(__dirname, 'public', 'posters')));
 
