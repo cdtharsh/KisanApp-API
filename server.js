@@ -5,6 +5,12 @@ import helmet from 'helmet';
 import connect from './database/mongoDB.js';
 import router from './routes/route.js';
 import { cleanUpExpiredTokens } from './services/deleteToken.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -29,6 +35,8 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true // Allow credentials (e.g., cookies, authorization headers)
 }));
+
+app.use('/image/posters', express.static(path.join(__dirname, 'public', 'posters')));
 
 const port = process.env.PORT || 3000;
 
