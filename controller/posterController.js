@@ -54,7 +54,7 @@ export const createPoster = async (req, res) => {
                 console.log(`Add poster: ${err}`);
                 return res.json({ error: err });
             }
-            const { posterName } = req.body;
+            const { posterName, posterType } = req.body;
             let imageUrl = 'no_url';
             if (req.file) {
                 imageUrl = `http://api.${process.env.ROOT}/image/posters/${req.file.filename}`;
@@ -66,6 +66,7 @@ export const createPoster = async (req, res) => {
 
             try {
                 const newPoster = new Poster({
+                    posterType: posterType,
                     posterName: posterName,
                     imageUrl: imageUrl,
                 });
@@ -100,7 +101,7 @@ export const updatePoster = async (req, res) => {
             }
 
             // Extract poster name and image URL from the request body
-            const { posterName } = req.body;
+            const { posterName, posterType } = req.body;
             let imageUrl = req.body.image;
 
             // If a new image was uploaded, update the imageUrl
@@ -109,9 +110,10 @@ export const updatePoster = async (req, res) => {
             }
 
             // Ensure that both the name and image URL are provided
-            if (!posterName || !imageUrl) {
-                return res.status(400).json({ error: "Name and image are required." });
+            if (!posterName || !imageUrl || posterType) {
+                return res.status(400).json({ error: "Type, Name and image are required." });
             }
+
 
             try {
                 // Find the poster to retrieve the old image URL

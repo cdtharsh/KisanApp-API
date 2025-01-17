@@ -2,10 +2,13 @@ import mongoose from 'mongoose';
 
 const posterSchema = new mongoose.Schema(
     {
+        posterType: {
+            type: String,
+            required: true,
+        },
         posterName: {
             type: String,
             required: true,
-            trim: true,
         },
         imageUrl: {
             type: String,
