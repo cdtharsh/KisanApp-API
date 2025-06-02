@@ -36,6 +36,8 @@ router.post('/reset-with-email', rateLimit.resetPasswordWithOtpLimiter, passCont
 //posters
 router.post('/posters/create', createPoster);
 
+//Plant Image Processing
+router.post('/predict');
 
 
 //DELETE route for deleting data

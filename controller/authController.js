@@ -12,9 +12,9 @@ const { JWT_SECRET, JWT_EXPIRES_IN } = process.env;
 
 export async function register(req, res) {
     try {
-        const { username, password, email, mobile, firstName, lastName, address, ...rest } = req.body;
+        const { username, password, email, mobile, firstName, lastName, address, isAdmin, ...rest } = req.body;
 
-        if (isAdmin !== undefined) {
+        if (isAdmin == true) {
             return res.status(400).send({ error: "You cannot assign the 'isAdmin' role please contact the support." });
         }
 
