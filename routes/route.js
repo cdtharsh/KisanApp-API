@@ -6,6 +6,10 @@ import * as authMiddleware from '../middleware/authMiddleware.js';
 import * as passController from '../controller/passwordReset.js';
 import { weather } from '../services/weatherService.js';
 import { createPoster, getAllPosters, getPosterById, updatePoster, deletePoster } from '../controller/posterController.js';
+import { predictPlantDisease } from '../controller/predictionController.js';
+import multer from 'multer';
+
+const upload = multer({ dest: 'predict/' }); // Temporary storage for uploaded files
 
 const router = Router();
 
@@ -37,7 +41,7 @@ router.post('/reset-with-email', rateLimit.resetPasswordWithOtpLimiter, passCont
 router.post('/posters/create', createPoster);
 
 //Plant Image Processing
-router.post('/predict');
+router.post('/predict', upload.single('file'), predictPlantDisease);
 
 
 //DELETE route for deleting data

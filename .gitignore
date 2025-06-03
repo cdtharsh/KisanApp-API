@@ -5,3 +5,7 @@ package-lock.json
 .env
 
 public/
+
+uploads/
+
+/predict
